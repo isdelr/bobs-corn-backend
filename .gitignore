@@ -1,0 +1,61 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs/
+server/logs/
+*.log
+*.log.*
+
+# Environment files
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+
+# SQLite databases & journals
+data.sqlite3
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sqlite-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite-wal
+*.sqlite-shm
+*.db-wal
+*.db-shm
+
+# Coverage / testing
+coverage/
+.nyc_output/
+coverage-final.json
+
+# Build artifacts / temp
+.dist/
+dist/
+build/
+tmp/
+temp/
+*.tsbuildinfo
+
+# IDE / Editor settings
+.idea/
+.vscode/
+*.iml
+
+# OS metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# Node REPL history
+.node_repl_history
+
+# Misc caches
+.cache/

@@ -1,0 +1,31 @@
+{
+  "name": "bobs-corn-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Express + SQLite (Knex) backend for Bob's Corn storefront",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "prepare": "node -e \"console.log('Ready')\""
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcrypt": "6.0.0",
+    "cors": "2.8.5",
+    "dotenv": "17.2.2",
+    "express": "5.1.0",
+    "express-rate-limit": "8.1.0",
+    "express-validator": "7.2.1",
+    "helmet": "8.1.0",
+    "knex": "3.1.0",
+    "sqlite3": "5.1.7",
+    "winston": "3.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
