@@ -73,7 +73,14 @@ export async function purchase(req, res, next) {
         quantity,
       });
     }
-    // Rate limit: max 1 unit per specific product per minute per user
+    // Rate limit: per-user per-product within a sliding time window
+    // Configurable via env:
+    // - PURCHASE_RATE_LIMIT_PER_PRODUCT (default 1)
+    // - PURCHASE_RATE_LIMIT_WINDOW_SECONDS (default 60)
+    const parsedLimit = Number.parseInt(process.env.PURCHASE_RATE_LIMIT_PER_PRODUCT ?? '', 10);
+    const limitPerProduct = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 1;
+    const parsedWindow = Number.parseInt(process.env.PURCHASE_RATE_LIMIT_WINDOW_SECONDS ?? '', 10);
+    const windowSeconds = Number.isFinite(parsedWindow) && parsedWindow > 0 ? parsedWindow : 60;
     // Sum requested quantities by product
     const requestedQtyByProductId = new Map();
     for (const oi of orderItems) {
@@ -85,7 +92,7 @@ export async function purchase(req, res, next) {
         .join('orders as o', 'oi.order_id', 'o.id')
         .where('o.user_id', userId)
         .whereIn('oi.product_id', productIds)
-        .whereRaw("o.created_at >= datetime('now', '-60 seconds')")
+        .whereRaw("o.created_at >= datetime('now', ?)", [`-${windowSeconds} seconds`])
         .select('oi.product_id')
         .sum({ purchased: 'oi.quantity' })
         .groupBy('oi.product_id');
@@ -93,12 +100,12 @@ export async function purchase(req, res, next) {
 
       for (const [pid, wantQty] of requestedQtyByProductId.entries()) {
         const prevQty = purchasedInWindow.get(pid) || 0;
-        if (prevQty + wantQty > 1) {
+        if (prevQty + wantQty > limitPerProduct) {
           const offending = orderItems.find((x) => x.product_id === pid);
           return res.status(429).json({
-            error: `Rate limit exceeded for product '${offending?.slug ?? String(pid)}'. Limit is 1 per minute.`,
-            limit: 1,
-            windowSeconds: 60,
+            error: `Rate limit exceeded for product '${offending?.slug ?? String(pid)}'. Limit is ${limitPerProduct} per ${windowSeconds} seconds.`,
+            limit: limitPerProduct,
+            windowSeconds,
             product: {
               id: String(pid),
               slug: offending?.slug,

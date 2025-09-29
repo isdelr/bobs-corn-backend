@@ -28,10 +28,10 @@ export async function searchProducts(req, res, next) {
     if (q.length === 0) return res.json([]);
     const like = `%${q}%`;
     const rows = await knex('products')
-      .whereILike('title', like)
-      .orWhereILike('subtitle', like)
-      .orWhereILike('description', like)
-      .orWhereILike('tags', like)
+      .whereLike('title', like)
+      .orWhereLike('subtitle', like)
+      .orWhereLike('description', like)
+      .orWhereLike('tags', like)
       .select('*');
     res.json(rows.map(rowToProduct));
   } catch (err) {
