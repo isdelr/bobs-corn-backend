@@ -20,7 +20,7 @@
  */
 
 import 'dotenv/config';  // Load environment variables from .env file
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -157,7 +157,7 @@ app.use('/api/account', accountRouter);
  * 404 Handler - Catches all unmatched routes
  * Must be defined after all other routes
  */
-app.use((req, res) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: 'Not found' });
 });
 
@@ -169,15 +169,15 @@ app.use((req, res) => {
  * - Returns generic error message to client (security)
  * - Includes request ID for support correlation
  * 
- * @param {Error} err - Error object
- * @param {Request} req - Express request
- * @param {Response} res - Express response
- * @param {NextFunction} next - Express next (unused but required)
+ * @param err - Error object
+ * @param req - Express request
+ * @param res - Express response
+ * @param next - Express next (unused but required)
  */
 // eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   // Log full error details internally
-  logger.error('Unhandled error', { err, reqId: req.id });
+  logger.error('Unhandled error', { err: err.message, stack: err.stack, reqId: req.id });
   
   // Return generic error to client (don't leak internals)
   res.status(500).json({ 

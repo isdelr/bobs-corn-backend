@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "description": "Express + SQLite (Knex) backend for Bob's Corn storefront",
-  "main": "server/index.js",
+  "main": "dist/server/index.js",
   "type": "module",
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "nodemon server/index.js",
-    "seed": "node server/seed.js --products=60 --users=15 --orders=20",
-    "seed:reset": "node server/seed.js --reset --products=80 --users=25 --orders=40",
-    "seed:dry": "node server/seed.js --dry --products=10 --users=3 --orders=5",
+    "build": "tsc",
+    "start": "tsx server/index.ts",
+    "start:prod": "node dist/server/index.js",
+    "dev": "tsx watch server/index.ts",
+    "seed": "tsx server/seed.ts --products=60 --users=15 --orders=20",
+    "seed:reset": "tsx server/seed.ts --reset --products=80 --users=25 --orders=40",
+    "seed:dry": "tsx server/seed.ts --dry --products=10 --users=3 --orders=5",
+    "typecheck": "tsc --noEmit",
     "prepare": "node -e \"console.log('Ready')\""
   },
   "engines": {
@@ -23,13 +26,20 @@
     "express": "5.1.0",
     "express-rate-limit": "8.1.0",
     "express-validator": "7.2.1",
-    "jsonwebtoken": "9.0.2",
     "helmet": "8.1.0",
+    "jsonwebtoken": "9.0.2",
     "knex": "3.1.0",
     "sqlite3": "5.1.7",
     "winston": "3.17.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.6.0",
+    "nodemon": "^3.1.10",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
   }
 }

@@ -2,20 +2,76 @@ import 'dotenv/config';
 import bcrypt from 'bcrypt';
 import { knex, initDb } from './db.js';
 import { seedProducts as baseProducts } from './productsSeed.js';
+import { User, Product, Address, ProductResponse } from './types/index.js';
 
 // Ensure the app's minimal product seed is skipped when running this seeder
 process.env.SKIP_INITIAL_PRODUCT_SEED = 'true';
 
+// Type definitions for CLI arguments and options
+interface SeedOptions {
+  reset: boolean;
+  users: number;
+  products: number;
+  orders: number;
+  dry: boolean;
+  verbose: boolean;
+}
+
+interface GeneratedUser {
+  name: string;
+  email: string;
+  address: Address;
+}
+
+interface GeneratedProduct {
+  slug: string;
+  title: string;
+  subtitle?: string;
+  price: number;
+  originalPrice?: number;
+  rating?: number;
+  ratingCount?: number;
+  tags?: string[];
+  images?: string[];
+  options?: any;
+  description?: string;
+  details?: any[];
+  specs?: Record<string, string>;
+  badges?: string[];
+}
+
+interface ProductFamily {
+  family: string;
+  adjectives: string[];
+  nouns: string[];
+  price: () => number;
+  subtitle: string;
+  badges?: string[];
+  options?: any[];
+}
+
 // --- Simple CLI arg parsing
-function parseArgs(argv) {
-  const args = new Map();
+function parseArgs(argv: string[]): SeedOptions {
+  const args = new Map<string, string | boolean>();
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a.startsWith('--')) {
-      const [k, v] = a.split('=');
-      if (v !== undefined) args.set(k.slice(2), v);
-      else if (i + 1 < argv.length && !argv[i + 1].startsWith('--')) args.set(a.slice(2), argv[++i]);
-      else args.set(a.slice(2), true);
+    if (a && a.startsWith('--')) {
+      const parts = a.split('=');
+      const k = parts[0];
+      const v = parts[1];
+      if (k && v !== undefined) {
+        args.set(k.slice(2), v);
+      } else if (k && i + 1 < argv.length) {
+        const nextArg = argv[i + 1];
+        if (nextArg && !nextArg.startsWith('--')) {
+          args.set(k.slice(2), nextArg);
+          i++;
+        } else {
+          args.set(k.slice(2), true);
+        }
+      } else if (k) {
+        args.set(k.slice(2), true);
+      }
     }
   }
   return {
@@ -29,11 +85,14 @@ function parseArgs(argv) {
 }
 
 // --- Utils
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const chance = (n, d = 1) => Math.random() < n / (d || 1);
+function pick<T>(arr: T[]): T {
+  const index = Math.floor(Math.random() * arr.length);
+  return arr[index] as T;
+}
+const randInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
+const chance = (n: number, d: number = 1): boolean => Math.random() < n / (d || 1);
 
-function slugify(s) {
+function slugify(s: string): string {
   return String(s)
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '') // strip diacritics
@@ -43,7 +102,7 @@ function slugify(s) {
     .slice(0, 80);
 }
 
-function priceTo(x, decimals = 2) {
+function priceTo(x: number, decimals: number = 2): number {
   return Number(x.toFixed(decimals));
 }
 
@@ -70,23 +129,22 @@ const LAST_NAMES = [
 ];
 const EMAIL_DOMAINS = ['example.com', 'mail.test', 'bobs.corn'];
 
-function makeUser(i) {
+function makeUser(i: number): GeneratedUser {
   const first = pick(FIRST_NAMES);
   const last = pick(LAST_NAMES);
   const name = `${first} ${last}`;
   const email = `${first}.${last}${i ? '.' + i : ''}@${pick(EMAIL_DOMAINS)}`.toLowerCase();
-  const address = {
-    line1: `${randInt(100, 9999)} ${pick(['Maple', 'Cedar', 'Oak', 'Pine', 'Elm'])} ${pick(['St', 'Ave', 'Blvd', 'Rd'])}`,
-    line2: chance(1, 4) ? `Apt ${randInt(1, 25)}${pick(['A','B','C','D'])}` : undefined,
+  const address: Address = {
+    street: `${randInt(100, 9999)} ${pick(['Maple', 'Cedar', 'Oak', 'Pine', 'Elm'])} ${pick(['St', 'Ave', 'Blvd', 'Rd'])}`,
     city: pick(['Snohomish', 'Monroe', 'Everett', 'Seattle', 'Lynnwood', 'Bothell']),
     state: 'WA',
-    postalCode: `${randInt(98000, 98999)}`,
+    zipCode: `${randInt(98000, 98999)}`,
     country: 'US',
   };
   return { name, email, address };
 }
 
-const PRODUCT_FAMILIES = [
+const PRODUCT_FAMILIES: ProductFamily[] = [
   {
     family: 'Kernels',
     adjectives: ['Heirloom', 'Farm-fresh', 'Golden', 'Ruby', 'Pearl', 'Butterfly', 'Mushroom'],
@@ -124,7 +182,7 @@ const PRODUCT_FAMILIES = [
   },
 ];
 
-function makeProduct(i) {
+function makeProduct(i: number): GeneratedProduct {
   const fam = pick(PRODUCT_FAMILIES);
   const title = `${pick(fam.adjectives)} ${pick(fam.nouns)}`;
   const slug = slugify(`${title}-${i}`);
@@ -140,26 +198,41 @@ function makeProduct(i) {
     { title: 'Ingredients', content: fam.family === 'Kernels' ? '100% Popcorn Kernels' : 'See package for details' },
     { title: 'Allergens', content: 'Packaged in a facility that also handles dairy and soy.' },
   ];
-  const specs = [
-    { label: 'Origin', value: pick(['Local family farm', 'Pacific Northwest', 'Midwest']) },
-    { label: 'Best by', value: `${randInt(6, 18)} months from pack date` },
-  ];
+  const specs: Record<string, string> = {
+    'Origin': pick(['Local family farm', 'Pacific Northwest', 'Midwest']),
+    'Best by': `${randInt(6, 18)} months from pack date`,
+  };
   return { slug, title, subtitle: fam.subtitle, price, rating, ratingCount, tags, images, options, description, details, specs, badges };
 }
 
-function buildProducts(targetCount) {
+function buildProducts(targetCount: number): GeneratedProduct[] {
   // Start with base products, but override images with a random remote URL
-  const products = [...baseProducts].map((p) => ({
-    ...p,
-    images: [pick(IMAGE_URLS)],
-  }));
+  const products: GeneratedProduct[] = baseProducts
+    .filter((p): p is ProductResponse & { slug: string; title: string; price: number } => 
+      p.slug !== undefined && p.title !== undefined && p.price !== undefined)
+    .map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      subtitle: p.subtitle,
+      price: p.price,
+      originalPrice: p.originalPrice,
+      rating: p.rating,
+      ratingCount: p.ratingCount,
+      tags: p.tags,
+      images: [pick(IMAGE_URLS)],
+      options: p.options,
+      description: p.description,
+      details: p.details,
+      specs: p.specs,
+      badges: p.badges,
+    }));
   const need = Math.max(0, targetCount - products.length);
   for (let i = 0; i < need; i++) products.push(makeProduct(i + 1));
   return products;
 }
 
-function makeShippingAddress(name) {
-  const addr = {
+function makeShippingAddress(name: string): any {
+  const addr: any = {
     name,
     line1: `${randInt(100, 9999)} ${pick(['Birch', 'Canyon', 'River', 'Sunset', 'Willow'])} ${pick(['Way', 'Ave', 'St', 'Dr'])}`,
     city: pick(['Snohomish', 'Monroe', 'Everett', 'Seattle', 'Lynnwood', 'Bothell']),
@@ -172,7 +245,7 @@ function makeShippingAddress(name) {
 }
 
 // --- Seed operations
-async function resetAll() {
+async function resetAll(): Promise<void> {
   // Order matters due to FKs
   await knex('order_items').del();
   await knex('orders').del();
@@ -182,7 +255,7 @@ async function resetAll() {
   try { await knex.raw("DELETE FROM sqlite_sequence WHERE name IN ('users','products','orders','order_items')"); } catch {}
 }
 
-async function upsertProducts(products) {
+async function upsertProducts(products: GeneratedProduct[]): Promise<{ total?: number; inserted?: number }> {
   const rows = products.map((p) => ({
     slug: p.slug,
     title: p.title,
@@ -201,11 +274,11 @@ async function upsertProducts(products) {
   }));
   if (!rows.length) return { inserted: 0 };
   await knex('products').insert(rows).onConflict('slug').merge();
-  const [{ c }] = await knex('products').count({ c: '*' });
+  const [{ c }] = await knex('products').count({ c: '*' }) as any;
   return { total: Number(c) };
 }
 
-async function upsertUsers(n) {
+async function upsertUsers(n: number): Promise<User[]> {
   const saltRounds = Number(process.env.BCRYPT_ROUNDS || 12);
   const password = process.env.SEED_PASSWORD || 'Passw0rd!';
   const rows = [];
@@ -214,38 +287,54 @@ async function upsertUsers(n) {
   const sharedHash = await bcrypt.hash(password, saltRounds);
 
   // Add a deterministic demo account
-  rows.push({ name: 'Demo User', email: 'demo@bobs.corn', password_hash: sharedHash, address: JSON.stringify(makeShippingAddress('Demo User')) });
+  rows.push({ 
+    name: 'Demo User', 
+    email: 'demo@bobs.corn', 
+    password_hash: sharedHash, 
+    address: JSON.stringify(makeShippingAddress('Demo User')) 
+  });
 
   for (let i = 0; i < n; i++) {
     const u = makeUser(i + 1);
-    rows.push({ name: u.name, email: u.email, password_hash: sharedHash, address: JSON.stringify(u.address) });
+    rows.push({ 
+      name: u.name, 
+      email: u.email, 
+      password_hash: sharedHash, 
+      address: JSON.stringify(u.address) 
+    });
   }
   await knex('users').insert(rows).onConflict('email').merge();
-  const users = await knex('users').select('*');
+  const users = await knex<User>('users').select('*');
   return users;
 }
 
-function asMoneyString(n) {
+function asMoneyString(n: number | string): string {
   return (Math.round(Number(n) * 100) / 100).toFixed(2);
 }
 
-async function createOrders(count, users) {
+async function createOrders(count: number, users: User[]): Promise<number> {
   if (!count) return 0;
-  const products = await knex('products').select('id', 'slug', 'title', 'price');
+  const products = await knex<Product>('products').select('id', 'slug', 'title', 'price');
   if (!products.length || !users.length) return 0;
 
   let created = 0;
   for (let i = 0; i < count; i++) {
     const user = pick(users);
     const numItems = randInt(1, 5);
-    const chosen = new Set();
-    const items = [];
+    const chosen = new Set<number>();
+    const items: Array<{product_id: number, slug: string, title: string, price: string, quantity: number}> = [];
     for (let j = 0; j < numItems; j++) {
       const p = pick(products);
       if (chosen.has(p.id)) continue;
       chosen.add(p.id);
       const quantity = randInt(1, 3);
-      items.push({ product_id: p.id, slug: p.slug, title: p.title, price: asMoneyString(p.price), quantity });
+      items.push({ 
+        product_id: p.id, 
+        slug: p.slug, 
+        title: p.title, 
+        price: asMoneyString(p.price), 
+        quantity 
+      });
     }
     if (!items.length) continue;
     const total = items.reduce((sum, it) => sum + Number(it.price) * it.quantity, 0);
@@ -264,7 +353,7 @@ async function createOrders(count, users) {
   return created;
 }
 
-async function main() {
+async function main(): Promise<void> {
   const opts = parseArgs(process.argv.slice(2));
   const start = Date.now();
   console.log('Seed options:', opts);
@@ -287,7 +376,7 @@ async function main() {
   }
 
   // Users
-  let users = [];
+  let users: User[] = [];
   if (!opts.dry) {
     users = await upsertUsers(opts.users);
     console.log(`Users upserted. Total users now: ${users.length}`);

@@ -21,11 +21,12 @@
  * @module logger
  */
 
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format, transports, Logger } from 'winston';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
+import { Request, Response, NextFunction } from 'express';
 
 // ESM module directory resolution
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -51,10 +52,8 @@ fs.mkdirSync(LOG_DIR, { recursive: true });
  * - Integrate with log aggregation services (ELK, Datadog, etc.)
  * - Set up alerts for error-level logs
  * - Use request IDs for distributed tracing
- * 
- * @type {import('winston').Logger}
  */
-export const logger = createLogger({
+export const logger: Logger = createLogger({
   level: LOG_LEVEL,
   format: format.combine(
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),  // Human-readable timestamps
@@ -120,12 +119,8 @@ if (NODE_ENV !== 'production') {
  * Performance:
  * - Uses high-resolution timer for accurate measurements
  * - Minimal overhead (~1-2ms per request)
- * 
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next middleware
  */
-export function httpLogger(req, res, next) {
+export function httpLogger(req: Request, res: Response, next: NextFunction): void {
   // Generate or extract request ID for distributed tracing
   if (!req.id) {
     const existing = req.headers['x-request-id'];
@@ -140,7 +135,7 @@ export function httpLogger(req, res, next) {
    * Log request completion
    * Called on both 'finish' and 'close' events to ensure logging
    */
-  function done() {
+  function done(): void {
     if (logged) return; // Prevent duplicate logs
     logged = true;
     
@@ -157,14 +152,26 @@ export function httpLogger(req, res, next) {
     const level = status >= 500 ? 'error' : status >= 400 ? 'warn' : 'info';
 
     // Metadata for structured logging
-    const meta = {
-      reqId: req.id,                                      // Request ID for tracing
+    interface LogMeta {
+      reqId: string;
+      status: number;
+      durationMs: number;
+      ip?: string;
+      userAgent?: string;
+      contentLength?: string | number;
+    }
+
+    const meta: LogMeta = {
+      reqId: req.id!,                                     // Request ID for tracing
       status,                                             // HTTP status code
       durationMs,                                         // Response time
       ip: req.ip,                                        // Client IP
       userAgent: req.headers['user-agent'],             // Client identifier
-      contentLength: res.getHeader('content-length') || undefined, // Response size
+      contentLength: res.getHeader('content-length') as string | number | undefined, // Response size
     };
+
+    // Remove undefined values
+    if (!meta.contentLength) delete meta.contentLength;
 
     // Log with structured metadata
     logger.log(level, '%s %s', method, url, meta);

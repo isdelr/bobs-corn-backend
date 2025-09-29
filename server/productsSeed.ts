@@ -1,4 +1,6 @@
-export const seedProducts = [
+import { ProductResponse } from './types/index.js';
+
+export const seedProducts: Partial<ProductResponse>[] = [
   {
     id: '1',
     slug: 'farm-fresh-yellow-kernels',
@@ -9,9 +11,8 @@ export const seedProducts = [
     ratingCount: 214,
     tags: ['Best Seller'],
     images: ['/images/kernels-yellow-1.jpg', '/images/kernels-yellow-2.jpg', '/images/kernels-yellow-3.jpg'],
-    options: [
-      {
-        id: 'size',
+    options: {
+      size: {
         name: 'Size',
         values: [
           { id: '1lb', label: '1 lb' },
@@ -19,19 +20,19 @@ export const seedProducts = [
           { id: '5lb', label: '5 lb' },
         ],
       },
-    ],
+    },
     description:
       "Meet our farm‑fresh yellow kernels—bright, fluffy, and ready to pop. Grown with care and packaged at peak freshness for the perfect bowl every time.",
     details: [
-      { title: 'Ingredients', content: '100% Yellow Popcorn Kernels' },
-      { title: 'Allergens', content: 'Packaged in a facility that also handles dairy and soy.' },
-      { title: 'Storage', content: 'Store in a cool, dry place. Reseal after opening.' },
+      'Ingredients: 100% Yellow Popcorn Kernels',
+      'Allergens: Packaged in a facility that also handles dairy and soy.',
+      'Storage: Store in a cool, dry place. Reseal after opening.',
     ],
-    specs: [
-      { label: 'Origin', value: 'Local family farm' },
-      { label: 'Net weight', value: '1 lb (454 g)' },
-      { label: 'Best by', value: '12 months from pack date' },
-    ],
+    specs: {
+      'Origin': 'Local family farm',
+      'Net weight': '1 lb (454 g)',
+      'Best by': '12 months from pack date',
+    },
     badges: ['Non‑GMO', 'Gluten‑Free', 'Small‑Batch'],
   },
   {

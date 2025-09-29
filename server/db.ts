@@ -13,11 +13,12 @@
  * @module db
  */
 
-import knexLib from 'knex';
+import knexLib, { Knex } from 'knex';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { seedProducts } from './productsSeed.js';
+import { Product, ProductResponse, CountResult } from './types/index.js';
 
 // ESM module directory resolution
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -40,17 +41,15 @@ fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
  * - Consider PostgreSQL/MySQL for high traffic
  * - Add read replicas for scaling
  * - Implement connection retry logic
- * 
- * @type {import('knex').Knex}
  */
-export const knex = knexLib({
+export const knex: Knex = knexLib({
   client: 'sqlite3',
   connection: {
     filename: DB_FILE,
   },
   useNullAsDefault: true,  // SQLite requires this for default values
   pool: {
-    afterCreate: (conn, done) => {
+    afterCreate: (conn: any, done: (err?: Error | null) => void) => {
       // Enable foreign key constraints (off by default in SQLite)
       conn.run('PRAGMA foreign_keys = ON', done);
     },
@@ -61,13 +60,13 @@ export const knex = knexLib({
  * Safely parse JSON strings from database
  * SQLite stores JSON as TEXT, so we need to parse it
  * 
- * @param {string|null} val - JSON string or null
- * @returns {any|null} Parsed object or null if invalid/empty
+ * @param val - JSON string or null
+ * @returns Parsed object or null if invalid/empty
  */
-function parseJSONSafe(val) {
+function parseJSONSafe<T = any>(val: string | null | undefined): T | null {
   if (val == null) return null;
   try { 
-    return JSON.parse(val); 
+    return JSON.parse(val) as T; 
   } catch { 
     // Return null for malformed JSON instead of crashing
     return null; 
@@ -77,10 +76,10 @@ function parseJSONSafe(val) {
 /**
  * Convert JavaScript values to JSON strings for storage
  * 
- * @param {any} val - JavaScript value to stringify
- * @returns {string|null} JSON string or null
+ * @param val - JavaScript value to stringify
+ * @returns JSON string or null
  */
-function stringifyJSON(val) {
+function stringifyJSON(val: any): string | null {
   if (val == null) return null;
   return JSON.stringify(val);
 }
@@ -94,10 +93,10 @@ function stringifyJSON(val) {
  * - Optional field handling (undefined vs null)
  * - Consistent ID formatting (always strings)
  * 
- * @param {Object} row - Raw database row
- * @returns {Object|null} Formatted product object or null
+ * @param row - Raw database row
+ * @returns Formatted product object or null
  */
-export function rowToProduct(row) {
+export function rowToProduct(row: Product | null | undefined): ProductResponse | null {
   if (!row) return null;
   
   return {
@@ -111,13 +110,13 @@ export function rowToProduct(row) {
       : undefined,                         // Sale comparison price
     rating: Number(row.rating || 0),       // Average rating
     ratingCount: Number(row.rating_count || 0), // Number of reviews
-    tags: parseJSONSafe(row.tags) || undefined,        // Category tags
-    images: parseJSONSafe(row.images) || [],           // Product images
-    options: parseJSONSafe(row.options) || undefined,  // Size/color variants
+    tags: parseJSONSafe<string[]>(row.tags) || undefined,        // Category tags
+    images: parseJSONSafe<string[]>(row.images) || [],           // Product images
+    options: parseJSONSafe<Record<string, any>>(row.options) || undefined,  // Size/color variants
     description: row.description || '',                // Full description
-    details: parseJSONSafe(row.details) || undefined,  // Bullet points
-    specs: parseJSONSafe(row.specs) || undefined,      // Technical specs
-    badges: parseJSONSafe(row.badges) || undefined,    // "New", "Sale", etc.
+    details: parseJSONSafe<string[]>(row.details) || undefined,  // Bullet points
+    specs: parseJSONSafe<Record<string, string>>(row.specs) || undefined,      // Technical specs
+    badges: parseJSONSafe<string[]>(row.badges) || undefined,    // "New", "Sale", etc.
   };
 }
 
@@ -137,11 +136,12 @@ export function rowToProduct(row) {
  * - SKIP_INITIAL_PRODUCT_SEED: Skip auto-seeding products
  * 
  * @async
- * @returns {Promise<void>}
+ * @returns Promise<void>
  */
-export async function initDb() {
+export async function initDb(): Promise<void> {
   // Check if we should skip automatic product seeding
   const skipInitialSeed = String(process.env.SKIP_INITIAL_PRODUCT_SEED || '').toLowerCase() === 'true';
+  
   // ============================================================
   // USERS TABLE - Authentication and profile storage
   // ============================================================
@@ -240,9 +240,10 @@ export async function initDb() {
   
   // Seed initial products if database is empty (for demo/development)
   if (!skipInitialSeed) {
-    const [{ count }] = await knex('products').count({ count: '*' });
+    const result = await knex('products').count('* as count').first() as CountResult | undefined;
+    const count = result ? Number(result.count) : 0;
     
-    if (Number(count) === 0) {
+    if (count === 0) {
       // Transform seed data to database format
       const rows = seedProducts.map((p) => ({
         slug: p.slug,

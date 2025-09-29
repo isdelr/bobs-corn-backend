@@ -314,25 +314,25 @@ For complete API documentation with all endpoints and examples, see [API_DOCUMEN
 bobs-corn-backend/
 ├── server/
 │   ├── controllers/        # Business logic layer
-│   │   ├── authController.js       # Authentication logic
-│   │   ├── ordersController.js     # Order processing & rate limiting
-│   │   ├── productsController.js   # Product catalog management
-│   │   ├── accountController.js    # User account management
-│   │   └── healthController.js     # Health check endpoint
+│   │   ├── authController.ts       # Authentication logic
+│   │   ├── ordersController.ts     # Order processing & rate limiting
+│   │   ├── productsController.ts   # Product catalog management
+│   │   ├── accountController.ts    # User account management
+│   │   └── healthController.ts     # Health check endpoint
 │   ├── routes/             # API route definitions
-│   │   ├── auth.js                 # Auth endpoints
-│   │   ├── orders.js               # Order endpoints
-│   │   ├── products.js             # Product endpoints
-│   │   ├── account.js              # Account endpoints
-│   │   ├── search.js               # Search endpoints
-│   │   └── health.js               # Health endpoint
+│   │   ├── auth.ts                 # Auth endpoints
+│   │   ├── orders.ts               # Order endpoints
+│   │   ├── products.ts             # Product endpoints
+│   │   ├── account.ts              # Account endpoints
+│   │   ├── search.ts               # Search endpoints
+│   │   └── health.ts               # Health endpoint
 │   ├── middleware/         # Custom middleware
-│   │   └── auth.js                 # JWT verification
-│   ├── index.js           # Application entry point
-│   ├── db.js              # Database configuration
-│   ├── logger.js          # Logging configuration
-│   ├── seed.js            # Database seeder CLI
-│   ├── productsSeed.js    # Initial product data
+│   │   └── auth.ts                 # JWT verification
+│   ├── index.ts           # Application entry point
+│   ├── db.ts              # Database configuration
+│   ├── logger.ts          # Logging configuration
+│   ├── seed.ts            # Database seeder CLI
+│   ├── productsSeed.ts    # Initial product data
 │   └── .env.example       # Environment variables template
 ├── logs/                  # Application logs (gitignored)
 ├── data.sqlite3           # SQLite database file (gitignored)
