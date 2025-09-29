@@ -72,16 +72,6 @@ function parseJSONSafe<T = any>(val: string | null | undefined): T | null {
   }
 }
 
-/**
- * Convert JavaScript values to JSON strings for storage
- * 
- * @param val - JavaScript value to stringify
- * @returns JSON string or null
- */
-function stringifyJSON(val: any): string | null {
-  if (val == null) return null;
-  return JSON.stringify(val);
-}
 
 /**
  * Transform database row to API-friendly product object

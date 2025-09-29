@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import bcrypt from 'bcrypt';
 import { knex, initDb } from './db.js';
-import { User, Product, Address, ProductResponse } from './types/index.js';
+import { User, Product, Address } from './types/index.js';
 
 // Ensure the app's minimal product seed is skipped when running this seeder
 process.env.SKIP_INITIAL_PRODUCT_SEED = 'true';
