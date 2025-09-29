@@ -56,6 +56,7 @@ export function rowToProduct(row) {
 }
 
 export async function initDb() {
+  const skipInitialSeed = String(process.env.SKIP_INITIAL_PRODUCT_SEED || '').toLowerCase() === 'true';
   const hasUsers = await knex.schema.hasTable('users');
   if (!hasUsers) {
     await knex.schema.createTable('users', (t) => {
@@ -123,25 +124,27 @@ export async function initDb() {
     });
   }
 
-  const [{ count }] = await knex('products').count({ count: '*' });
-  if (Number(count) === 0) {
-    // Seed initial products
-    const rows = seedProducts.map((p) => ({
-      slug: p.slug,
-      title: p.title,
-      subtitle: p.subtitle ?? null,
-      price: p.price,
-      original_price: p.originalPrice ?? null,
-      rating: p.rating ?? null,
-      rating_count: p.ratingCount ?? null,
-      tags: stringifyJSON(p.tags ?? null),
-      images: stringifyJSON(p.images ?? []),
-      options: stringifyJSON(p.options ?? null),
-      description: p.description ?? '',
-      details: stringifyJSON(p.details ?? null),
-      specs: stringifyJSON(p.specs ?? null),
-      badges: stringifyJSON(p.badges ?? null),
-    }));
-    await knex('products').insert(rows);
+  if (!skipInitialSeed) {
+    const [{ count }] = await knex('products').count({ count: '*' });
+    if (Number(count) === 0) {
+      // Seed initial products
+      const rows = seedProducts.map((p) => ({
+        slug: p.slug,
+        title: p.title,
+        subtitle: p.subtitle ?? null,
+        price: p.price,
+        original_price: p.originalPrice ?? null,
+        rating: p.rating ?? null,
+        rating_count: p.ratingCount ?? null,
+        tags: stringifyJSON(p.tags ?? null),
+        images: stringifyJSON(p.images ?? []),
+        options: stringifyJSON(p.options ?? null),
+        description: p.description ?? '',
+        details: stringifyJSON(p.details ?? null),
+        specs: stringifyJSON(p.specs ?? null),
+        badges: stringifyJSON(p.badges ?? null),
+      }));
+      await knex('products').insert(rows);
+    }
   }
 }

@@ -19,6 +19,30 @@ Quick start
    npm start
    Server will start on http://localhost:4000 (configurable via PORT).
 
+Seeding
+- Use the built-in seeder to generate realistic users, products, and orders.
+
+Commands
+- Seed default dataset:
+  npm run seed
+- Reset and reseed larger dataset:
+  npm run seed:reset
+- Dry run (no writes), useful to preview:
+  npm run seed:dry
+
+Direct CLI options
+- You can pass flags to adjust counts:
+  node server/seed.js --products=80 --users=25 --orders=40
+- Other flags:
+  --reset       Clear all tables before seeding
+  --dry         Do not write to the database
+  --verbose     Log extra details
+
+Notes
+- Generated users share the default password from `server/.env` (`SEED_PASSWORD`, default: `Passw0rd!`).
+- A demo account is always created: `demo@bobs.corn` using the same seed password.
+- The app's minimal initial product seed can be disabled with `SKIP_INITIAL_PRODUCT_SEED=true`. The seeder sets this automatically when it runs.
+
 API endpoints
 - GET /health
   Simple health check.
@@ -53,6 +77,7 @@ Project structure
   - routes/: route definitions (auth.js, products.js, search.js, health.js)
   - db.js: Knex setup, schema creation, and seeding
   - productsSeed.js: initial product rows used on first run
+  - seed.js: CLI data generator for users, products, and orders
   - .env.example: sample env configuration
 
 Environment variables (server/.env)

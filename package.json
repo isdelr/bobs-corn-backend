@@ -8,6 +8,9 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
+    "seed": "node server/seed.js --products=60 --users=15 --orders=20",
+    "seed:reset": "node server/seed.js --reset --products=80 --users=25 --orders=40",
+    "seed:dry": "node server/seed.js --dry --products=10 --users=3 --orders=5",
     "prepare": "node -e \"console.log('Ready')\""
   },
   "engines": {
