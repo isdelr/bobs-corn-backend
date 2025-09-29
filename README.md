@@ -13,7 +13,6 @@
     <a href="#-quick-start">Quick Start</a> •
     <a href="#-api-documentation">API Docs</a> •
     <a href="#-architecture">Architecture</a> •
-    <a href="#-deployment">Deployment</a> •
   </p>
 </div>
 
@@ -453,55 +452,6 @@ LOG_LEVEL=debug
 6. **Enable HTTPS** in production with SSL certificates
 7. **Use environment-specific configs** for different deployment stages
 
-## 🚢 Deployment
-
-### Production Checklist
-
-- [ ] Set `NODE_ENV=production`
-- [ ] Generate secure `JWT_SECRET`
-- [ ] Configure specific `ALLOWED_ORIGINS`
-- [ ] Set up HTTPS with SSL certificates
-- [ ] Configure production database (PostgreSQL/MySQL recommended)
-- [ ] Set up monitoring and alerting
-- [ ] Configure log aggregation service
-- [ ] Set up automated backups
-- [ ] Review and adjust rate limits
-- [ ] Enable CORS for specific domains only
-
-### Docker Deployment
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-EXPOSE 4000
-CMD ["npm", "start"]
-```
-
-### PM2 Process Management
-
-```bash
-# Install PM2
-npm install -g pm2
-
-# Start with PM2
-pm2 start server/index.js --name bobs-corn-api
-
-# Save PM2 configuration
-pm2 save
-pm2 startup
-```
-
-## 🧪 Testing
-
-### Run Tests
-```bash
-npm test
-```
-
-### API Testing with cURL
 
 ```bash
 # Health check
