@@ -66,6 +66,13 @@ export async function initDb() {
       t.timestamp('created_at').defaultTo(knex.fn.now());
     });
   }
+  // Add address column if missing (stores JSON)
+  const hasUserAddress = await knex.schema.hasColumn('users', 'address');
+  if (!hasUserAddress) {
+    await knex.schema.alterTable('users', (t) => {
+      t.text('address');
+    });
+  }
 
   const hasProducts = await knex.schema.hasTable('products');
   if (!hasProducts) {
@@ -86,6 +93,33 @@ export async function initDb() {
       t.text('specs'); // JSON
       t.text('badges'); // JSON
       t.timestamp('created_at').defaultTo(knex.fn.now());
+    });
+  }
+
+  // Orders table
+  const hasOrders = await knex.schema.hasTable('orders');
+  if (!hasOrders) {
+    await knex.schema.createTable('orders', (t) => {
+      t.increments('id').primary();
+      t.integer('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
+      t.decimal('total', 10, 2).notNullable();
+      t.text('shipping_address'); // JSON
+      t.string('status').notNullable().defaultTo('paid');
+      t.timestamp('created_at').defaultTo(knex.fn.now());
+    });
+  }
+
+  // Order items table
+  const hasOrderItems = await knex.schema.hasTable('order_items');
+  if (!hasOrderItems) {
+    await knex.schema.createTable('order_items', (t) => {
+      t.increments('id').primary();
+      t.integer('order_id').notNullable().references('id').inTable('orders').onDelete('CASCADE');
+      t.integer('product_id').notNullable().references('id').inTable('products');
+      t.string('slug').notNullable();
+      t.string('title').notNullable();
+      t.decimal('price', 10, 2).notNullable(); // price at purchase time
+      t.integer('quantity').notNullable();
     });
   }
 

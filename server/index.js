@@ -8,6 +8,8 @@ import healthRouter from './routes/health.js';
 import productsRouter from './routes/products.js';
 import searchRouter from './routes/search.js';
 import authRouter from './routes/auth.js';
+import ordersRouter from './routes/orders.js';
+import accountRouter from './routes/account.js';
 import { httpLogger, logger } from './logger.js';
 
 const app = express();
@@ -60,6 +62,8 @@ app.use('/health', healthRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/orders', ordersRouter);
+app.use('/api/account', accountRouter);
 
 // 404 handler
 app.use((req, res) => {
