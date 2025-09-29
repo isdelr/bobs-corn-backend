@@ -73,6 +73,42 @@ export async function purchase(req, res, next) {
         quantity,
       });
     }
+    // Rate limit: max 1 unit per specific product per minute per user
+    // Sum requested quantities by product
+    const requestedQtyByProductId = new Map();
+    for (const oi of orderItems) {
+      requestedQtyByProductId.set(oi.product_id, (requestedQtyByProductId.get(oi.product_id) || 0) + oi.quantity);
+    }
+    if (requestedQtyByProductId.size) {
+      const productIds = Array.from(requestedQtyByProductId.keys());
+      const recentRows = await knex('order_items as oi')
+        .join('orders as o', 'oi.order_id', 'o.id')
+        .where('o.user_id', userId)
+        .whereIn('oi.product_id', productIds)
+        .whereRaw("o.created_at >= datetime('now', '-60 seconds')")
+        .select('oi.product_id')
+        .sum({ purchased: 'oi.quantity' })
+        .groupBy('oi.product_id');
+      const purchasedInWindow = new Map(recentRows.map((r) => [Number(r.product_id), Number(r.purchased) || 0]));
+
+      for (const [pid, wantQty] of requestedQtyByProductId.entries()) {
+        const prevQty = purchasedInWindow.get(pid) || 0;
+        if (prevQty + wantQty > 1) {
+          const offending = orderItems.find((x) => x.product_id === pid);
+          return res.status(429).json({
+            error: `Rate limit exceeded for product '${offending?.slug ?? String(pid)}'. Limit is 1 per minute.`,
+            limit: 1,
+            windowSeconds: 60,
+            product: {
+              id: String(pid),
+              slug: offending?.slug,
+              requestedQuantity: wantQty,
+              recentPurchasedQuantity: prevQty,
+            },
+          });
+        }
+      }
+    }
 
     // Compute total
     const totalCents = orderItems.reduce((sum, oi) => sum + priceToCents(oi.price) * oi.quantity, 0);
