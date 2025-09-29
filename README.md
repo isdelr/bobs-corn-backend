@@ -332,7 +332,6 @@ bobs-corn-backend/
 │   ├── db.ts              # Database configuration
 │   ├── logger.ts          # Logging configuration
 │   ├── seed.ts            # Database seeder CLI
-│   ├── productsSeed.ts    # Initial product data
 │   └── .env.example       # Environment variables template
 ├── logs/                  # Application logs (gitignored)
 ├── data.sqlite3           # SQLite database file (gitignored)

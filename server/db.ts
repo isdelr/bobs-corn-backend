@@ -17,7 +17,6 @@ import knexLib, { Knex } from 'knex';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { seedProducts } from './productsSeed.js';
 import { Product, ProductResponse, CountResult } from './types/index.js';
 
 // ESM module directory resolution
@@ -238,33 +237,14 @@ export async function initDb(): Promise<void> {
   // INITIAL DATA SEEDING
   // ============================================================
   
-  // Seed initial products if database is empty (for demo/development)
+  // Initial seeding is now handled by the seed.ts CLI tool
+  // Set SKIP_INITIAL_PRODUCT_SEED=true to skip this check
   if (!skipInitialSeed) {
     const result = await knex('products').count('* as count').first() as CountResult | undefined;
     const count = result ? Number(result.count) : 0;
     
     if (count === 0) {
-      // Transform seed data to database format
-      const rows = seedProducts.map((p) => ({
-        slug: p.slug,
-        title: p.title,
-        subtitle: p.subtitle ?? null,
-        price: p.price,
-        original_price: p.originalPrice ?? null,
-        rating: p.rating ?? null,
-        rating_count: p.ratingCount ?? null,
-        tags: stringifyJSON(p.tags ?? null),          // Convert arrays to JSON
-        images: stringifyJSON(p.images ?? []),        // Convert arrays to JSON
-        options: stringifyJSON(p.options ?? null),    // Convert objects to JSON
-        description: p.description ?? '',
-        details: stringifyJSON(p.details ?? null),    // Convert arrays to JSON
-        specs: stringifyJSON(p.specs ?? null),        // Convert objects to JSON
-        badges: stringifyJSON(p.badges ?? null),      // Convert arrays to JSON
-      }));
-      
-      // Insert seed products
-      await knex('products').insert(rows);
-      console.log(`🌽 Seeded ${rows.length} products`);
+      console.log('🌽 No products found. Run "npm run seed" to populate the database.');
     }
   }
 }

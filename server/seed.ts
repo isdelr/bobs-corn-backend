@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import bcrypt from 'bcrypt';
 import { knex, initDb } from './db.js';
-import { seedProducts as baseProducts } from './productsSeed.js';
 import { User, Product, Address, ProductResponse } from './types/index.js';
 
 // Ensure the app's minimal product seed is skipped when running this seeder
@@ -206,28 +205,11 @@ function makeProduct(i: number): GeneratedProduct {
 }
 
 function buildProducts(targetCount: number): GeneratedProduct[] {
-  // Start with base products, but override images with a random remote URL
-  const products: GeneratedProduct[] = baseProducts
-    .filter((p): p is ProductResponse & { slug: string; title: string; price: number } => 
-      p.slug !== undefined && p.title !== undefined && p.price !== undefined)
-    .map((p) => ({
-      slug: p.slug,
-      title: p.title,
-      subtitle: p.subtitle,
-      price: p.price,
-      originalPrice: p.originalPrice,
-      rating: p.rating,
-      ratingCount: p.ratingCount,
-      tags: p.tags,
-      images: [pick(IMAGE_URLS)],
-      options: p.options,
-      description: p.description,
-      details: p.details,
-      specs: p.specs,
-      badges: p.badges,
-    }));
-  const need = Math.max(0, targetCount - products.length);
-  for (let i = 0; i < need; i++) products.push(makeProduct(i + 1));
+  // Generate all products dynamically
+  const products: GeneratedProduct[] = [];
+  for (let i = 0; i < targetCount; i++) {
+    products.push(makeProduct(i + 1));
+  }
   return products;
 }
 
