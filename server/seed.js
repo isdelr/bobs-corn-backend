@@ -47,6 +47,16 @@ function priceTo(x, decimals = 2) {
   return Number(x.toFixed(decimals));
 }
 
+// Remote image URLs to rotate randomly for seeded products
+const IMAGE_URLS = [
+  'https://www.westcoastseeds.com/cdn/shop/files/CN374_CaramelPopcorn_2015_STOCK_R400MR_4.jpg?crop=center&height=1024&v=1708444445&width=1024',
+  'https://upload.wikimedia.org/wikipedia/commons/d/d6/Popcorn_-_Studio_-_2011.jpg',
+  'https://growhoss.com/cdn/shop/products/south-american-popcorn_460x@2x.jpg?v=1691783141',
+  'https://altonbrown.com/wp-content/uploads/2016/04/alton-brown-kettle-corn-recipe.jpg',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/G-H-Cretors-Caramel-Corn.jpg/1200px-G-H-Cretors-Caramel-Corn.jpg',
+  'https://www.forestwholefoods.co.uk/wp-content/uploads/2017/05/Organic-Popping-Corn-1500px.jpg',
+];
+
 // --- Generators (human-friendly, not gibberish)
 const FIRST_NAMES = [
   'Alice', 'Bob', 'Charlie', 'Diana', 'Evan', 'Fiona', 'Grace', 'Hector', 'Ivy', 'Jack',
@@ -118,8 +128,7 @@ function makeProduct(i) {
   const fam = pick(PRODUCT_FAMILIES);
   const title = `${pick(fam.adjectives)} ${pick(fam.nouns)}`;
   const slug = slugify(`${title}-${i}`);
-  const imgBase = `/images/${slug}`;
-  const images = [`${imgBase}-1.jpg`, `${imgBase}-2.jpg`];
+  const images = [pick(IMAGE_URLS)];
   const price = fam.price();
   const rating = chance(3, 4) ? Number((3.8 + Math.random() * 1.2).toFixed(1)) : Number((3.0 + Math.random() * 2.0).toFixed(1));
   const ratingCount = randInt(10, 1200);
@@ -139,7 +148,11 @@ function makeProduct(i) {
 }
 
 function buildProducts(targetCount) {
-  const products = [...baseProducts];
+  // Start with base products, but override images with a random remote URL
+  const products = [...baseProducts].map((p) => ({
+    ...p,
+    images: [pick(IMAGE_URLS)],
+  }));
   const need = Math.max(0, targetCount - products.length);
   for (let i = 0; i < need; i++) products.push(makeProduct(i + 1));
   return products;
