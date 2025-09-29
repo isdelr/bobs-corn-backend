@@ -528,11 +528,6 @@ curl -X POST http://localhost:4000/api/orders/purchase \
   -d '{"items":[{"slug":"premium-yellow-corn","quantity":1}]}'
 ```
 
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - Built as a technical assessment for a senior engineering position
