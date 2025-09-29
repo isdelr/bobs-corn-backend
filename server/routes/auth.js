@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
-import { signup, login } from '../controllers/authController.js';
+import { signup, login, getProfile, logout } from '../controllers/authController.js';
 
 const router = Router();
 
@@ -17,5 +17,7 @@ const authLimiter = rateLimit({
 
 router.post('/signup', authLimiter, [body('name').trim().isLength({ min: 2 }).withMessage('Name is required'), emailValidator, passwordValidator], signup);
 router.post('/login', authLimiter, [emailValidator, passwordValidator], login);
+router.get('/me', getProfile);
+router.post('/logout', logout);
 
 export default router;

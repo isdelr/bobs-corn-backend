@@ -17,20 +17,31 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Security: Helmet
 app.use(helmet());
 
-// CORS
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*')
+// CORS - Allow common Next.js development and production origins
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001,https://localhost:3000')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin)) {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return cb(null, true);
+      
+      // Allow any origin in development
+      if (NODE_ENV === 'development') return cb(null, true);
+      
+      // Check against allowed origins in production
+      if (ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin)) {
         return cb(null, true);
       }
+      
       return cb(new Error('Not allowed by CORS'));
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 

@@ -38,3 +38,34 @@ export async function login(req, res, next) {
     next(err);
   }
 }
+
+export async function getProfile(req, res, next) {
+  try {
+    // For now, return a mock user since we don't have proper session management yet
+    // In production, this would check req.user from session/JWT middleware
+    if (!req.headers.authorization) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    // Mock implementation - in production, extract user from JWT/session
+    const mockUser = {
+      id: '1',
+      name: 'Test User',
+      email: 'test@example.com'
+    };
+    
+    res.json(mockUser);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function logout(req, res, next) {
+  try {
+    // In a real implementation, this would clear the session or invalidate the JWT
+    // For now, just return success
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (err) {
+    next(err);
+  }
+}

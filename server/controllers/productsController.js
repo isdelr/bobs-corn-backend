@@ -38,3 +38,33 @@ export async function searchProducts(req, res, next) {
     next(err);
   }
 }
+
+export async function getFeaturedProducts(req, res, next) {
+  try {
+    // Get top 4 products by rating, with preference for "Best Seller" tag
+    const rows = await knex('products')
+      .select('*')
+      .orderBy('rating', 'desc')
+      .orderBy('rating_count', 'desc')
+      .limit(4);
+    res.json(rows.map(rowToProduct));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getCategories(req, res, next) {
+  try {
+    // Return static categories as defined in frontend
+    const categories = [
+      { key: 'kernels', title: 'Popcorn Kernels', subtitle: 'Classic & heirloom' },
+      { key: 'seasonings', title: 'Seasonings', subtitle: 'Sweet & savory' },
+      { key: 'gourmet', title: 'Gourmet Flavors', subtitle: 'Small‑batch treats' },
+      { key: 'gifts', title: 'Gifts & Bundles', subtitle: 'Share the joy' },
+      { key: 'merch', title: 'Merch', subtitle: 'Tees, hats & more' },
+    ];
+    res.json(categories);
+  } catch (err) {
+    next(err);
+  }
+}
