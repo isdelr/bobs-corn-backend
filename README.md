@@ -6,7 +6,6 @@
     <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen" alt="Node Version" />
     <img src="https://img.shields.io/badge/express-4.x-blue" alt="Express Version" />
     <img src="https://img.shields.io/badge/sqlite-3.x-orange" alt="SQLite Version" />
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" />
   </p>
 
   <p>
@@ -15,7 +14,6 @@
     <a href="#-api-documentation">API Docs</a> •
     <a href="#-architecture">Architecture</a> •
     <a href="#-deployment">Deployment</a> •
-    <a href="#-contributing">Contributing</a>
   </p>
 </div>
 
