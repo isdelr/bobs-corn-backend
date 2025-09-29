@@ -39,6 +39,17 @@ const app = express();
 // Configuration from environment variables
 const PORT = Number(process.env.PORT || 4000);
 const NODE_ENV = process.env.NODE_ENV || 'development';
+const TRUST_PROXY = process.env.TRUST_PROXY || 'false';
+
+// Configure proxy trust settings
+// This is important for accurate IP detection when behind a reverse proxy
+// Set TRUST_PROXY=true when running behind nginx, Docker, or cloud load balancers
+if (TRUST_PROXY === 'true' || TRUST_PROXY === '1') {
+  app.set('trust proxy', true);
+} else if (TRUST_PROXY && TRUST_PROXY !== 'false' && TRUST_PROXY !== '0') {
+  // Allow specific proxy configurations like 'loopback' or IP addresses
+  app.set('trust proxy', TRUST_PROXY);
+}
 
 // ============================================================
 // SECURITY MIDDLEWARE
